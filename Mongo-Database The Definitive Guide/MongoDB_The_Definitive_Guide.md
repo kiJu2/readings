@@ -291,7 +291,69 @@ db.papers.updateOne({
  // "$pop": {"key": -1}은 첫번째 부분 제거
 })
 ```
-- `$pull`은 주어진 조건에 맞는 배열 요소를 제거
+- `$pull`은 주어진 조건에 맞는 배열 요소를 모두 제거
 
 ##### 배열의 위치 기반 변경
-- todo
+- 위치 연산자(`$`)를 사용한다.
+```json
+"comments": [
+  {
+    "comment": "good post",
+    "author": "John",
+    "votes": 0,
+  },
+  {
+    "comment": "hello",
+    "author": "Pooop",
+    "votes": -2,
+  },
+  {
+    "comment": "good post",
+    "author": "max",
+    "votes": 2,
+  },
+  {
+    "comment": "good post hh",
+    "author": "alex",
+    "votes": 4,
+  },
+]
+```
+- 첫 번째 comments를 수정하고자 할 때는 `db.blog.updateOne({"post" : post_id}, {"$inc": {"comments.0.votes": 1}})`를 사용하면 된다.
+- 다음과 같이 사용할 수도 있다. `db.blog.updateOne({"comments.author" : "john"}, {"$set": {"comments.$.author": "jim"}})`
+##### 배열 필터를 이용한 갱신
+- `arrayFilters`를 이용하여 특정 조건에 맞는 배열 요소를 갱신할 수 있다.
+```javascript
+db.blog.updateOne(
+  {
+    "post": post_id
+  },
+  {
+    $set: {"comments.$[elem].hidden" : true},
+  },
+  {
+    arrayFilters: [{ "elem.votes": {$lte: -5} }]
+  }
+)
+```
+#### 3.3.3 갱신 입력
+- 도큐먼트가 존재하면 갱신을, 도큐먼트가 존재하지 않으면 입력을 수행한다.
+- `upsert`라고 표현한다.(ME: `update` + `insert`)
+- 세번째 옵션으로 추가할 수 있다.
+```javascript
+db.anaytics.updateone(
+  {
+    "url": "/blog" 
+  },
+  {
+    "$inc": {
+      {
+        "$pageviews": 1
+      }
+    }
+  },
+  {
+    "upsert": true
+  }
+)
+```
