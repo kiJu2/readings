@@ -570,6 +570,40 @@ db.foo.find({"$where": function () {
 ```
 
 #### 4.5 커서
+##### 4.5.0
 - 데이터베이스는 커서를 사용해 `find`의 결과를 반환한다.
-- TODO
-  - ME: 여기만 하면 이제 기본 문법은 끝 !!! 드디어 개발 배움
+```javascript
+> var here = db.user.find();
+> here;
+
+/*
+{ "_id" : ObjectId("62a7eb6b852fcfb331a3b914"), "name" : "hello" }
+{ "_id" : ObjectId("62a7ec08852fcfb331a3b915"), "name" : "lee", "age" : 27 }
+*/
+> here;
+/* 아무것도 출력되지 않는다. 커서가 끝까지(2) 다 순회했기 때문으로 추측(ME) */
+> here.hasNext();
+// false
+
+> var here = db.user.find();
+> here.hasNext();
+// true
+> here.next();
+// { "_id" : ObjectId("62a7eb6b852fcfb331a3b914"), "name" : "hello" }
+
+> here.forEach((v) => print(v));
+/*
+[object BSON]
+[object BSON]
+*/
+```
+- ME: 다만, 웹서버에서 혹은 mongodb 내에서 위처럼 `find`로 불러와서 하나씩 탐색하면 성능 이슈는 없을까?
+  - ME: 객체의 양이 매우 크다면?
+    - ME: 아마도 `default max-size`가 있지 않을까
+  - find 호출할 때 셸이 몽고를 즉시 쿼리하지 않는다.(ME: 해결)
+  - 결과를 요청하는 쿼리를 보낼 때까지 기다린다.
+  - 그 전에 옵션을 추가할 수 있다.
+    - ex: `sort`, `limit`, `skip` 등
+  - 셸은 `next` 혹은 `hasNext` 메서드 호출 시 서버 왕복 횟수를 줄이기 위해 적은 값을 반환한다.
+    - `100개 도큐먼트` 혹은 `4MB` 더 적은 것을 가져온다.
+
